@@ -33,20 +33,30 @@ class StorageService {
    * Get a value from secure storage
    */
   async getItem(key: string): Promise<string | null> {
+    console.log('💾 storageService.getItem called for key:', key);
+    console.log('🌐 Platform:', Platform.OS);
+
     try {
       if (Platform.OS === 'web') {
+        console.log('🌐 Using localStorage (web platform)');
         // Use localStorage on web
         if (typeof window !== 'undefined' && window.localStorage) {
-          return window.localStorage.getItem(key);
+          const value = window.localStorage.getItem(key);
+          console.log('✅ localStorage.getItem result:', value ? `${value.substring(0, 15)}... (length: ${value.length})` : 'NULL');
+          return value;
         } else {
+          console.log('❌ localStorage is not available');
           throw new Error('localStorage is not available');
         }
       } else {
+        console.log('📱 Using SecureStore (mobile platform)');
         // Use SecureStore on mobile
-        return await SecureStore.getItemAsync(key);
+        const value = await SecureStore.getItemAsync(key);
+        console.log('✅ SecureStore.getItemAsync result:', value ? `${value.substring(0, 15)}... (length: ${value.length})` : 'NULL');
+        return value;
       }
     } catch (error) {
-      console.error('Storage getItem error:', error);
+      console.error('❌ Storage getItem error:', error);
       return null;
     }
   }

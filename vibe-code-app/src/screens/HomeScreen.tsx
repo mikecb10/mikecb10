@@ -40,29 +40,47 @@ export default function HomeScreen() {
   ];
 
   const handleGenerate = async () => {
+    console.log('🔵 Generate button clicked');
+    console.log('📝 Description:', description);
+    console.log('📱 App type:', appType);
+    console.log('🌐 Platform:', Platform.OS);
+
     if (!description.trim()) {
+      console.log('❌ Description is empty');
       Alert.alert('Error', 'Please describe what you want to build');
       return;
     }
 
+    console.log('✅ Description validation passed');
     setIsGenerating(true);
+    console.log('⏳ isGenerating set to true');
 
     try {
+      console.log('🚀 Calling claudeService.generateApp...');
       const result = await claudeService.generateApp({
         description,
         appType,
       });
 
+      console.log('✅ API call successful');
+      console.log('📄 Generated code length:', result.code.length);
+      console.log('🔧 Framework:', result.framework);
+
       setIsGenerating(false);
 
+      console.log('🧭 Navigating to Preview screen...');
       navigation.navigate('Preview', {
         code: result.code,
         appType,
         description,
       });
+      console.log('✅ Navigation complete');
     } catch (error) {
+      console.log('❌ Error caught in handleGenerate:', error);
+      console.error('❌ Full error object:', error);
       setIsGenerating(false);
       const errorMessage = error instanceof Error ? error.message : 'Failed to generate app. Please try again.';
+      console.log('❌ Error message:', errorMessage);
       Alert.alert('Error', errorMessage);
     }
   };

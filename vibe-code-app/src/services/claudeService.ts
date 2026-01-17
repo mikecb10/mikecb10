@@ -14,10 +14,16 @@ export interface GenerateAppResponse {
 
 class ClaudeService {
   private async getApiKey(): Promise<string> {
+    console.log('🔐 getApiKey: Fetching API key from storage...');
     const apiKey = await storageService.getItem('claude_api_key');
+    console.log('🔐 getApiKey: Retrieved value:', apiKey ? `${apiKey.substring(0, 15)}... (length: ${apiKey.length})` : 'NULL');
+
     if (!apiKey) {
+      console.log('❌ getApiKey: API key not found in storage');
       throw new Error('Claude API key not found. Please configure it in Settings.');
     }
+
+    console.log('✅ getApiKey: API key found and valid');
     return apiKey;
   }
 
@@ -68,16 +74,32 @@ Remember: Output ONLY the code, no explanations or markdown formatting.`;
   }
 
   async generateApp(request: GenerateAppRequest): Promise<GenerateAppResponse> {
-    try {
-      const apiKey = await this.getApiKey();
+    console.log('📡 claudeService.generateApp called');
+    console.log('📊 Request:', { appType: request.appType, descriptionLength: request.description.length });
 
+    try {
+      console.log('🔑 Loading API key...');
+      const apiKey = await this.getApiKey();
+      console.log('✅ API key loaded:', apiKey ? `${apiKey.substring(0, 10)}...` : 'MISSING');
+
+      if (!apiKey) {
+        console.log('❌ API key is null or empty');
+        throw new Error('API key is missing');
+      }
+
+      console.log('🔧 Initializing Anthropic client...');
       // Initialize Anthropic client
       const client = new Anthropic({
         apiKey,
       });
+      console.log('✅ Anthropic client initialized');
 
       const systemPrompt = this.getSystemPrompt(request.appType);
       const userPrompt = this.buildPrompt(request.description, request.appType);
+      console.log('📝 Prompts prepared - System:', systemPrompt.length, 'chars, User:', userPrompt.length, 'chars');
+
+      console.log('🌐 Calling Claude API...');
+      console.log('🔢 Model: claude-sonnet-4-5-20250929');
 
       // Call Claude API
       const message = await client.messages.create({
@@ -93,18 +115,28 @@ Remember: Output ONLY the code, no explanations or markdown formatting.`;
         ],
       });
 
+      console.log('✅ API response received');
+      console.log('📦 Response ID:', message.id);
+      console.log('📊 Content blocks:', message.content.length);
+
       // Extract the generated code
       const content = message.content[0];
+      console.log('📄 Content type:', content.type);
+
       let code = '';
 
       if (content.type === 'text') {
         code = content.text;
+        console.log('📝 Raw code length:', code.length);
+      } else {
+        console.log('⚠️ Content type is not text:', content.type);
       }
 
       // Clean up the code if Claude wrapped it in markdown code blocks
       code = this.cleanCode(code);
+      console.log('✨ Cleaned code length:', code.length);
 
-      return {
+      const result = {
         code,
         framework: request.appType === 'mobile' ? 'React Native' : 'React + Next.js',
         files: [
@@ -114,8 +146,17 @@ Remember: Output ONLY the code, no explanations or markdown formatting.`;
           },
         ],
       };
+
+      console.log('✅ generateApp completed successfully');
+      return result;
     } catch (error) {
+      console.log('❌ Error in generateApp:', error);
+      console.error('❌ Full error details:', error);
+
       if (error instanceof Error) {
+        console.log('❌ Error name:', error.name);
+        console.log('❌ Error message:', error.message);
+        console.log('❌ Error stack:', error.stack);
         throw new Error(`Failed to generate app: ${error.message}`);
       }
       throw new Error('Failed to generate app: Unknown error');
