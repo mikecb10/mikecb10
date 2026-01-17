@@ -16,6 +16,9 @@ export default function SettingsScreen() {
   const [apiKey, setApiKey] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [keyExists, setKeyExists] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const MASKED_KEY = 'sk-ant-' + '*'.repeat(40);
 
   useEffect(() => {
     loadApiKey();
@@ -26,12 +29,32 @@ export default function SettingsScreen() {
       const storedKey = await SecureStore.getItemAsync('claude_api_key');
       if (storedKey) {
         setKeyExists(true);
+        setIsEditing(false);
         // Show masked version
-        setApiKey('sk-ant-' + '*'.repeat(20));
+        setApiKey(MASKED_KEY);
+      } else {
+        setKeyExists(false);
+        setIsEditing(true);
+        setApiKey('');
       }
     } catch (error) {
       console.error('Failed to load API key:', error);
+      Alert.alert('Error', 'Failed to load saved API key');
     }
+  };
+
+  const handleFocus = () => {
+    // When user focuses on the field with a masked key, clear it for editing
+    if (apiKey === MASKED_KEY) {
+      setApiKey('');
+      setIsEditing(true);
+    }
+  };
+
+  const handleChangeText = (text: string) => {
+    setApiKey(text);
+    setIsEditing(true);
+    setShowSuccessMessage(false);
   };
 
   const handleSave = async () => {
@@ -40,18 +63,47 @@ export default function SettingsScreen() {
       return;
     }
 
+    // Don't allow saving the masked placeholder
+    if (apiKey === MASKED_KEY) {
+      Alert.alert('Error', 'Please enter a new API key. The current value is just a placeholder.');
+      return;
+    }
+
     if (!apiKey.startsWith('sk-ant-')) {
       Alert.alert('Error', 'Invalid API key format. Claude API keys start with "sk-ant-"');
       return;
     }
 
+    // Basic validation - Claude API keys should be longer than just "sk-ant-"
+    if (apiKey.length < 20) {
+      Alert.alert('Error', 'API key appears too short. Please check your key and try again.');
+      return;
+    }
+
     setIsSaving(true);
+    setShowSuccessMessage(false);
 
     try {
       await SecureStore.setItemAsync('claude_api_key', apiKey);
-      Alert.alert('Success', 'API key saved securely!');
       setKeyExists(true);
+      setIsEditing(false);
+      setApiKey(MASKED_KEY);
+      setShowSuccessMessage(true);
+
+      // Show success alert
+      Alert.alert('Success', 'API key saved securely!', [
+        {
+          text: 'OK',
+          onPress: () => setShowSuccessMessage(false),
+        },
+      ]);
+
+      // Auto-hide success message after 3 seconds
+      setTimeout(() => {
+        setShowSuccessMessage(false);
+      }, 3000);
     } catch (error) {
+      console.error('Error saving API key:', error);
       Alert.alert('Error', 'Failed to save API key. Please try again.');
     } finally {
       setIsSaving(false);
@@ -72,8 +124,11 @@ export default function SettingsScreen() {
               await SecureStore.deleteItemAsync('claude_api_key');
               setApiKey('');
               setKeyExists(false);
+              setIsEditing(true);
+              setShowSuccessMessage(false);
               Alert.alert('Success', 'API key removed');
             } catch (error) {
+              console.error('Error removing API key:', error);
               Alert.alert('Error', 'Failed to remove API key');
             }
           },
@@ -105,17 +160,33 @@ export default function SettingsScreen() {
           </TouchableOpacity>
 
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>API Key</Text>
+            <View style={styles.labelRow}>
+              <Text style={styles.label}>API Key</Text>
+              {keyExists && !isEditing && (
+                <View style={styles.savedBadge}>
+                  <Text style={styles.savedBadgeText}>✓ Saved</Text>
+                </View>
+              )}
+            </View>
             <TextInput
-              style={styles.input}
+              style={[
+                styles.input,
+                showSuccessMessage && styles.inputSuccess,
+              ]}
               placeholder="sk-ant-..."
               placeholderTextColor="#666"
               value={apiKey}
-              onChangeText={setApiKey}
-              secureTextEntry={keyExists}
+              onChangeText={handleChangeText}
+              onFocus={handleFocus}
               autoCapitalize="none"
               autoCorrect={false}
+              secureTextEntry={false}
             />
+            {showSuccessMessage && (
+              <View style={styles.successMessage}>
+                <Text style={styles.successMessageText}>✓ API key saved successfully!</Text>
+              </View>
+            )}
           </View>
 
           <TouchableOpacity
@@ -220,11 +291,27 @@ const styles = StyleSheet.create({
   inputContainer: {
     marginBottom: 15,
   },
+  labelRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
   label: {
     fontSize: 14,
     fontWeight: '600',
     color: '#fff',
-    marginBottom: 8,
+  },
+  savedBadge: {
+    backgroundColor: '#00aa00',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  savedBadgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#fff',
   },
   input: {
     backgroundColor: '#1a1a1a',
@@ -234,6 +321,24 @@ const styles = StyleSheet.create({
     color: '#fff',
     borderWidth: 1,
     borderColor: '#333',
+  },
+  inputSuccess: {
+    borderColor: '#00aa00',
+    borderWidth: 2,
+  },
+  successMessage: {
+    marginTop: 8,
+    backgroundColor: '#00330011',
+    borderRadius: 8,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#00aa00',
+  },
+  successMessageText: {
+    fontSize: 14,
+    color: '#00dd00',
+    fontWeight: '600',
+    textAlign: 'center',
   },
   saveButton: {
     backgroundColor: '#fff',
