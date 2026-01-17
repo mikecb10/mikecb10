@@ -9,7 +9,11 @@ A free, open-source mobile app that recreates Vibe Code functionality using your
 
 - **AI-Powered Generation**: Describe your app idea and let Claude generate production-ready code
 - **Multi-Platform Support**: Generate both React Native (mobile) and React/Next.js (web) applications
-- **Live Code Preview**: View generated code instantly with syntax highlighting
+- **Live Preview with QR Code**:
+  - **Mobile Apps**: Scan QR code with Expo Go to see your app running live on your phone
+  - **Web Apps**: Interactive iframe preview with real-time rendering
+- **Expo Snack Integration**: Automatically creates shareable Expo Snacks for mobile apps
+- **Code View**: View generated code with syntax highlighting
 - **Workspace Management**: Save and manage multiple projects
 - **Example Templates**: Pre-built prompts for common app types (fitness, finance, content management, etc.)
 - **Secure API Key Storage**: Your Claude API key is stored securely on device using Expo Secure Store
@@ -104,8 +108,28 @@ npm run web
    - Be specific about features, UI elements, and functionality
    - Example: "A fitness tracker with calorie counting, workout logging, and progress charts"
 3. **Tap "Generate App"**: Claude will create production-ready code
-4. **View the code**: See your generated app code in the Preview screen
-5. **Save to Workspace**: Keep your projects for later reference
+4. **Preview your app**:
+   - Toggle to "Preview" mode to see a live preview
+   - **For Mobile Apps**: A QR code will be generated - scan it with Expo Go to see your app running on your phone
+   - **For Web Apps**: An interactive preview will load right in the app
+5. **View the code**: Toggle to "Code" mode to see the generated source code
+6. **Save to Workspace**: Keep your projects for later reference
+
+### Using Live Preview
+
+**For Mobile Apps:**
+1. Generate a mobile app
+2. Tap "Preview" to switch to preview mode
+3. The app will automatically create an Expo Snack
+4. Scan the QR code with your phone's camera
+5. Open the link in Expo Go app
+6. Your app will load and run live on your phone!
+
+**For Web Apps:**
+1. Generate a web app
+2. Tap "Preview" to switch to preview mode
+3. The app will render in an interactive preview window
+4. Interact with your app directly in the preview
 
 ### Using Example Templates
 
@@ -131,11 +155,15 @@ vibe-code-app/
 ├── src/
 │   ├── screens/
 │   │   ├── HomeScreen.tsx          # Main app builder interface
-│   │   ├── PreviewScreen.tsx       # Code preview and actions
+│   │   ├── PreviewScreen.tsx       # Code preview with live preview
 │   │   ├── WorkspaceScreen.tsx     # Project management
 │   │   └── SettingsScreen.tsx      # API key configuration
+│   ├── components/
+│   │   ├── QRCodeDisplay.tsx       # QR code for mobile preview
+│   │   └── WebPreview.tsx          # Web app preview with iframe
 │   ├── services/
-│   │   └── claudeService.ts        # Claude API integration
+│   │   ├── claudeService.ts        # Claude API integration
+│   │   └── snackService.ts         # Expo Snack API integration
 │   └── types/
 │       └── index.ts                # TypeScript type definitions
 ├── App.tsx                         # Root navigation component
@@ -149,6 +177,9 @@ vibe-code-app/
 - **TypeScript** - Type-safe JavaScript
 - **React Navigation** - Navigation library
 - **Anthropic SDK** - Claude AI integration
+- **Expo Snack API** - Live mobile app preview
+- **React Native QR Code** - QR code generation for mobile preview
+- **React Native WebView** - Web app preview rendering
 - **Expo Secure Store** - Secure API key storage
 - **AsyncStorage** - Local project persistence
 
@@ -268,13 +299,16 @@ MIT License - feel free to use this for personal or commercial projects!
 
 ## Roadmap
 
-- [ ] Code preview/live rendering
+- [x] Live preview with QR code for mobile apps
+- [x] Interactive web app preview
+- [x] Expo Snack integration
 - [ ] Multi-file project generation
 - [ ] Custom template creation
 - [ ] Code refinement with follow-up prompts
 - [ ] Export to GitHub repository
 - [ ] Team collaboration features
 - [ ] Built-in code editor
+- [ ] Save snack URLs to workspace
 
 ---
 

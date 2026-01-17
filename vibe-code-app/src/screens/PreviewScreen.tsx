@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -9,10 +9,14 @@ import {
   Share,
   Alert,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import * as Clipboard from 'expo-clipboard';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import snackService, { SnackResponse } from '../services/snackService';
+import QRCodeDisplay from '../components/QRCodeDisplay';
+import WebPreview from '../components/WebPreview';
 
 type RootStackParamList = {
   Preview: { code: string; appType: string; description: string };
@@ -25,6 +29,32 @@ export default function PreviewScreen() {
   const navigation = useNavigation();
   const { code, appType, description } = route.params;
   const [viewMode, setViewMode] = useState<'code' | 'preview'>('code');
+  const [snackData, setSnackData] = useState<SnackResponse | null>(null);
+  const [isCreatingSnack, setIsCreatingSnack] = useState(false);
+  const [snackError, setSnackError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Auto-create snack for mobile apps when preview mode is selected
+    if (viewMode === 'preview' && appType === 'mobile' && !snackData && !isCreatingSnack) {
+      createSnackPreview();
+    }
+  }, [viewMode, appType]);
+
+  const createSnackPreview = async () => {
+    setIsCreatingSnack(true);
+    setSnackError(null);
+
+    try {
+      const snack = await snackService.createSnack(code, description);
+      setSnackData(snack);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create preview';
+      setSnackError(errorMessage);
+      Alert.alert('Preview Error', errorMessage);
+    } finally {
+      setIsCreatingSnack(false);
+    }
+  };
 
   const handleCopyCode = async () => {
     await Clipboard.setStringAsync(code);
@@ -123,24 +153,47 @@ export default function PreviewScreen() {
       </View>
 
       {/* Code/Preview Content */}
-      <ScrollView style={styles.content}>
-        {viewMode === 'code' ? (
+      {viewMode === 'code' ? (
+        <ScrollView style={styles.content}>
           <View style={styles.codeContainer}>
             <ScrollView horizontal>
               <Text style={styles.codeText}>{code}</Text>
             </ScrollView>
           </View>
-        ) : (
-          <View style={styles.previewContainer}>
-            <Text style={styles.previewPlaceholder}>
-              Preview mode is under development
-            </Text>
-            <Text style={styles.previewSubtext}>
-              For now, you can copy the code and run it in your development environment
-            </Text>
-          </View>
-        )}
-      </ScrollView>
+        </ScrollView>
+      ) : (
+        <View style={styles.content}>
+          {appType === 'mobile' ? (
+            <ScrollView style={styles.previewScrollView}>
+              {isCreatingSnack ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="large" color="#fff" />
+                  <Text style={styles.loadingText}>Creating live preview...</Text>
+                </View>
+              ) : snackError ? (
+                <View style={styles.errorContainer}>
+                  <Text style={styles.errorTitle}>Preview Error</Text>
+                  <Text style={styles.errorText}>{snackError}</Text>
+                  <TouchableOpacity
+                    style={styles.retryButton}
+                    onPress={createSnackPreview}
+                  >
+                    <Text style={styles.retryButtonText}>Retry</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : snackData ? (
+                <QRCodeDisplay
+                  url={snackData.url}
+                  snackId={snackData.id}
+                  loading={false}
+                />
+              ) : null}
+            </ScrollView>
+          ) : (
+            <WebPreview code={code} description={description} />
+          )}
+        </View>
+      )}
 
       {/* Action Buttons */}
       <View style={styles.actions}>
@@ -228,24 +281,50 @@ const styles = StyleSheet.create({
     color: '#0f0',
     lineHeight: 20,
   },
-  previewContainer: {
+  previewScrollView: {
+    flex: 1,
+  },
+  loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 40,
+    minHeight: 300,
   },
-  previewPlaceholder: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#fff',
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  previewSubtext: {
-    fontSize: 14,
+  loadingText: {
+    marginTop: 15,
+    fontSize: 16,
     color: '#999',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+    minHeight: 300,
+  },
+  errorTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#ff4444',
+    marginBottom: 10,
+  },
+  errorText: {
+    fontSize: 14,
+    color: '#ff6666',
     textAlign: 'center',
-    lineHeight: 20,
+    marginBottom: 20,
+  },
+  retryButton: {
+    backgroundColor: '#fff',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000',
   },
   actions: {
     padding: 20,
