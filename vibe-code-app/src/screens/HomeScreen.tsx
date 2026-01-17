@@ -15,6 +15,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import claudeService from '../services/claudeService';
+import LiveCodePreview from '../components/LiveCodePreview';
 
 type RootStackParamList = {
   Home: undefined;
@@ -30,6 +31,8 @@ export default function HomeScreen() {
   const [appType, setAppType] = useState<'mobile' | 'web'>('mobile');
   const [description, setDescription] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [streamingCode, setStreamingCode] = useState('');
+  const [isStreamComplete, setIsStreamComplete] = useState(false);
 
   const examplePrompts = [
     { emoji: '💪', text: 'A fitness tracker app with calorie counting, workout logging, weight tracking, and progress charts. Include a clean modern UI with tabs for Dashboard, Workouts, Nutrition, and Profile.' },
@@ -54,32 +57,60 @@ export default function HomeScreen() {
 
     console.log('✅ Description validation passed');
     setIsGenerating(true);
+    setStreamingCode('');
+    setIsStreamComplete(false);
     console.log('⏳ isGenerating set to true');
 
     try {
-      console.log('🚀 Calling claudeService.generateApp...');
-      const result = await claudeService.generateApp({
-        description,
-        appType,
-      });
+      console.log('🚀 Calling claudeService.generateAppStreaming...');
 
-      console.log('✅ API call successful');
-      console.log('📄 Generated code length:', result.code.length);
-      console.log('🔧 Framework:', result.framework);
+      // Use streaming API
+      await claudeService.generateAppStreaming(
+        {
+          description,
+          appType,
+        },
+        // onChunk callback - called for each piece of code
+        (chunk: string) => {
+          setStreamingCode((prev) => prev + chunk);
+        },
+        // onComplete callback - called when generation is complete
+        (finalCode: string) => {
+          console.log('✅ Streaming complete');
+          console.log('📄 Final code length:', finalCode.length);
 
-      setIsGenerating(false);
+          setIsStreamComplete(true);
+          setIsGenerating(false);
 
-      console.log('🧭 Navigating to Preview screen...');
-      navigation.navigate('Preview', {
-        code: result.code,
-        appType,
-        description,
-      });
-      console.log('✅ Navigation complete');
+          // Auto-navigate to Preview after a short delay
+          setTimeout(() => {
+            console.log('🧭 Navigating to Preview screen...');
+            navigation.navigate('Preview', {
+              code: finalCode,
+              appType,
+              description,
+            });
+
+            // Reset streaming state
+            setStreamingCode('');
+            setIsStreamComplete(false);
+          }, 1500);
+        },
+        // onError callback - called if there's an error
+        (error: Error) => {
+          console.log('❌ Error in streaming:', error);
+          setIsGenerating(false);
+          setStreamingCode('');
+          setIsStreamComplete(false);
+          Alert.alert('Error', error.message || 'Failed to generate app. Please try again.');
+        }
+      );
     } catch (error) {
       console.log('❌ Error caught in handleGenerate:', error);
       console.error('❌ Full error object:', error);
       setIsGenerating(false);
+      setStreamingCode('');
+      setIsStreamComplete(false);
       const errorMessage = error instanceof Error ? error.message : 'Failed to generate app. Please try again.';
       console.log('❌ Error message:', errorMessage);
       Alert.alert('Error', errorMessage);
@@ -211,6 +242,14 @@ export default function HomeScreen() {
                 {!isGenerating && <Text style={styles.generateButtonSubtext}>Powered by Claude AI</Text>}
               </LinearGradient>
             </TouchableOpacity>
+
+            {/* Live Code Preview */}
+            {isGenerating && streamingCode && (
+              <LiveCodePreview
+                code={streamingCode}
+                isComplete={isStreamComplete}
+              />
+            )}
 
             {/* Example Prompts */}
             <View style={styles.examplesContainer}>

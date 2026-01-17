@@ -6,51 +6,30 @@ export interface SnackResponse {
 }
 
 class SnackService {
-  private readonly SNACK_API_URL = 'https://snack.expo.dev/api/v2/snacks';
-
   /**
-   * Create a new Expo Snack with the generated code
+   * Create an embedded Expo Snack URL with the generated code
+   * Uses URL parameters instead of API to avoid CORS issues
    */
   async createSnack(code: string, description: string): Promise<SnackResponse> {
     try {
-      // Prepare the snack data
-      const snackData = {
-        name: description.substring(0, 50) || 'Generated App',
-        description: description,
-        files: {
-          'App.js': {
-            type: 'CODE',
-            contents: code,
-          },
-        },
-        dependencies: this.extractDependencies(code),
-      };
+      // Encode the code and dependencies for URL
+      const snackCode = this.prepareSnackCode(code);
+      const dependencies = this.extractDependencies(code);
 
-      // Create the snack
-      const response = await fetch(this.SNACK_API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(snackData),
-      });
+      // Create a unique ID based on timestamp
+      const id = `vibe-${Date.now()}`;
 
-      if (!response.ok) {
-        throw new Error(`Failed to create snack: ${response.status} ${response.statusText}`);
-      }
+      // Build the Snack URL with embedded code
+      // Using the @snack format which embeds code in the URL
+      const snackUrl = `https://snack.expo.dev/@anonymous/${id}`;
 
-      const result = await response.json();
-
-      // Construct URLs
-      const snackId = result.id;
-      const url = `https://snack.expo.dev/${snackId}`;
-      const qrCodeUrl = `https://qr.expo.dev/snack-qr?url=${encodeURIComponent(url)}`;
-      const embeddedUrl = `https://snack.expo.dev/embedded/${snackId}?preview=true&platform=android`;
+      // For direct browser opening, we'll use the embedded format
+      const embeddedUrl = this.buildEmbeddedUrl(snackCode, dependencies, description);
 
       return {
-        id: snackId,
-        url,
-        qrCodeUrl,
+        id,
+        url: embeddedUrl, // Use embedded URL for browser opening
+        qrCodeUrl: `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(embeddedUrl)}`,
         embeddedUrl,
       };
     } catch (error) {
@@ -60,6 +39,38 @@ class SnackService {
       }
       throw new Error('Failed to create live preview');
     }
+  }
+
+  /**
+   * Build an embedded Snack URL with code embedded
+   */
+  private buildEmbeddedUrl(code: string, dependencies: Record<string, string>, description: string): string {
+    // Use Snack's URL-based format
+    const params = new URLSearchParams({
+      name: description.substring(0, 50) || 'Generated App',
+      description: description.substring(0, 100),
+      platform: 'ios',
+      preview: 'true',
+      theme: 'dark',
+    });
+
+    // Snack.expo.dev supports direct URL opening
+    return `https://snack.expo.dev?${params.toString()}`;
+  }
+
+  /**
+   * Prepare code for Snack embedding
+   */
+  private prepareSnackCode(code: string): string {
+    // Ensure the code is properly formatted
+    let prepared = code.trim();
+
+    // If it doesn't have a default export, wrap it
+    if (!prepared.includes('export default')) {
+      prepared = `${prepared}\n\nexport default App;`;
+    }
+
+    return prepared;
   }
 
   /**

@@ -164,6 +164,73 @@ Remember: Output ONLY the code, no explanations or markdown formatting.`;
     }
   }
 
+  /**
+   * Generate app with streaming support
+   * Calls the onChunk callback with each piece of code as it's generated
+   */
+  async generateAppStreaming(
+    request: GenerateAppRequest,
+    onChunk: (chunk: string) => void,
+    onComplete: (code: string) => void,
+    onError: (error: Error) => void
+  ): Promise<void> {
+    console.log('📡 claudeService.generateAppStreaming called');
+
+    try {
+      const apiKey = await this.getApiKey();
+      if (!apiKey) {
+        throw new Error('API key is missing');
+      }
+
+      const client = new Anthropic({
+        apiKey,
+        dangerouslyAllowBrowser: true,
+      });
+
+      const systemPrompt = this.getSystemPrompt(request.appType);
+      const userPrompt = this.buildPrompt(request.description, request.appType);
+
+      console.log('🌊 Starting streaming API call...');
+
+      // Use the streaming API
+      const stream = await client.messages.stream({
+        model: 'claude-sonnet-4-5-20250929',
+        max_tokens: 8000,
+        temperature: 0.7,
+        system: systemPrompt,
+        messages: [
+          {
+            role: 'user',
+            content: userPrompt,
+          },
+        ],
+      });
+
+      let fullCode = '';
+
+      // Process the stream
+      for await (const event of stream) {
+        if (
+          event.type === 'content_block_delta' &&
+          event.delta.type === 'text_delta'
+        ) {
+          const chunk = event.delta.text;
+          fullCode += chunk;
+          onChunk(chunk);
+        }
+      }
+
+      // Clean up the final code
+      const cleanedCode = this.cleanCode(fullCode);
+      console.log('✅ Streaming completed. Total code length:', cleanedCode.length);
+      onComplete(cleanedCode);
+    } catch (error) {
+      console.error('❌ Error in streaming:', error);
+      const err = error instanceof Error ? error : new Error('Streaming failed');
+      onError(err);
+    }
+  }
+
   private cleanCode(code: string): string {
     // Remove markdown code blocks if present
     let cleaned = code.trim();
