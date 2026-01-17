@@ -18,6 +18,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import snackService, { SnackResponse } from '../services/snackService';
 import QRCodeDisplay from '../components/QRCodeDisplay';
 import WebPreview from '../components/WebPreview';
+import Toast from '../components/Toast';
 
 type RootStackParamList = {
   Preview: { code: string; appType: string; description: string };
@@ -33,6 +34,8 @@ export default function PreviewScreen() {
   const [snackData, setSnackData] = useState<SnackResponse | null>(null);
   const [isCreatingSnack, setIsCreatingSnack] = useState(false);
   const [snackError, setSnackError] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastVisible, setToastVisible] = useState(false);
 
   useEffect(() => {
     // Auto-create snack for mobile apps when preview mode is selected
@@ -40,6 +43,15 @@ export default function PreviewScreen() {
       createSnackPreview();
     }
   }, [viewMode, appType]);
+
+  const showToast = (message: string) => {
+    setToastMessage(message);
+    setToastVisible(true);
+  };
+
+  const hideToast = () => {
+    setToastVisible(false);
+  };
 
   const createSnackPreview = async () => {
     setIsCreatingSnack(true);
@@ -59,7 +71,7 @@ export default function PreviewScreen() {
 
   const handleCopyCode = async () => {
     await Clipboard.setStringAsync(code);
-    Alert.alert('Success', 'Code copied to clipboard!');
+    showToast('✓ Code copied to clipboard!');
   };
 
   const handleShareCode = async () => {
@@ -94,13 +106,7 @@ export default function PreviewScreen() {
       // Save back to storage
       await AsyncStorage.setItem('projects', JSON.stringify(projects));
 
-      Alert.alert('Success', 'Project saved to workspace!', [
-        {
-          text: 'View Workspace',
-          onPress: () => navigation.navigate('Workspace' as never),
-        },
-        { text: 'OK' },
-      ]);
+      showToast('✓ Project saved to workspace!');
     } catch (error) {
       Alert.alert('Error', 'Failed to save project. Please try again.');
     }
@@ -269,6 +275,9 @@ export default function PreviewScreen() {
             </LinearGradient>
           </TouchableOpacity>
         </View>
+
+        {/* Toast Notification */}
+        <Toast message={toastMessage} visible={toastVisible} onHide={hideToast} />
       </SafeAreaView>
     </LinearGradient>
   );

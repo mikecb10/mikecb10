@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Linking, TouchableOpacity, ActivityIndicator, Platform, Alert } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
-import { WebView } from 'react-native-webview';
 
 interface QRCodeDisplayProps {
   url: string;
@@ -32,34 +31,26 @@ export default function QRCodeDisplay({ url, snackId, loading, code }: QRCodeDis
     );
   }
 
-  // Embed Snack in iframe for web preview
+  // On web, show instructions without WebView
   if (Platform.OS === 'web') {
     return (
       <View style={styles.container}>
-        <Text style={styles.title}>Mobile App Preview</Text>
-        <Text style={styles.subtitle}>Open Expo Snack to test on your device</Text>
-
-        <View style={styles.iframeContainer}>
-          <WebView
-            source={{ uri: 'https://snack.expo.dev' }}
-            style={styles.webView}
-            javaScriptEnabled={true}
-          />
-        </View>
+        <Text style={styles.title}>📱 Mobile App Preview</Text>
+        <Text style={styles.subtitle}>Test your app on a real device</Text>
 
         <View style={styles.instructionsContainer}>
           <Text style={styles.instructionTitle}>How to preview on your phone:</Text>
           <View style={styles.stepContainer}>
             <Text style={styles.stepNumber}>1.</Text>
-            <Text style={styles.stepText}>Copy the generated code below</Text>
+            <Text style={styles.stepText}>Click "Copy Code" below to copy the generated code</Text>
           </View>
           <View style={styles.stepContainer}>
             <Text style={styles.stepNumber}>2.</Text>
-            <Text style={styles.stepText}>Click "Open Expo Snack" to open a new Snack</Text>
+            <Text style={styles.stepText}>Click "Open in Expo Snack" to open a new Snack editor</Text>
           </View>
           <View style={styles.stepContainer}>
             <Text style={styles.stepNumber}>3.</Text>
-            <Text style={styles.stepText}>Paste the code in App.js</Text>
+            <Text style={styles.stepText}>Paste the code in App.js in the Snack editor</Text>
           </View>
           <View style={styles.stepContainer}>
             <Text style={styles.stepNumber}>4.</Text>
@@ -68,11 +59,11 @@ export default function QRCodeDisplay({ url, snackId, loading, code }: QRCodeDis
         </View>
 
         <TouchableOpacity style={styles.copyButton} onPress={handleCopyCode}>
-          <Text style={styles.copyButtonText}>📋 Copy Code to Clipboard</Text>
+          <Text style={styles.copyButtonText}>📋 Copy Code</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.linkButton} onPress={handleOpenSnack}>
-          <Text style={styles.linkButtonText}>🚀 Open Expo Snack →</Text>
+          <Text style={styles.linkButtonText}>🚀 Open in Expo Snack</Text>
         </TouchableOpacity>
       </View>
     );
@@ -138,17 +129,6 @@ const styles = StyleSheet.create({
     color: '#999',
     marginBottom: 20,
     textAlign: 'center',
-  },
-  iframeContainer: {
-    height: 400,
-    width: '100%',
-    marginBottom: 20,
-    borderRadius: 12,
-    overflow: 'hidden',
-    backgroundColor: '#1a1a1a',
-  },
-  webView: {
-    flex: 1,
   },
   instructionsContainer: {
     width: '100%',

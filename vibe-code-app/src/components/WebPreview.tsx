@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, Alert, Platform } from 'react-native';
 import { WebView } from 'react-native-webview';
 
 interface WebPreviewProps {
@@ -149,6 +149,31 @@ export default function WebPreview({ code, description }: WebPreviewProps) {
     );
   }
 
+  // On web platform, use iframe instead of WebView
+  if (Platform.OS === 'web') {
+    return (
+      <View style={styles.container}>
+        <View style={styles.previewHeader}>
+          <Text style={styles.previewTitle}>Live Web Preview</Text>
+          <Text style={styles.previewSubtitle}>Interactive preview of your generated app</Text>
+        </View>
+        <iframe
+          srcDoc={htmlContent}
+          style={{
+            flex: 1,
+            width: '100%',
+            height: '100%',
+            border: 'none',
+            backgroundColor: '#fff',
+          }}
+          sandbox="allow-scripts allow-same-origin"
+          title="Web App Preview"
+        />
+      </View>
+    );
+  }
+
+  // On mobile platforms, use WebView
   return (
     <View style={styles.container}>
       <View style={styles.previewHeader}>
