@@ -11,6 +11,7 @@ import {
   Platform,
   Alert,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import claudeService from '../services/claudeService';
@@ -31,12 +32,12 @@ export default function HomeScreen() {
   const [isGenerating, setIsGenerating] = useState(false);
 
   const examplePrompts = [
-    'A fitness tracker app with calorie counting, workout logging, weight tracking, and progress charts. Include a clean modern UI with tabs for Dashboard, Workouts, Nutrition, and Profile.',
-    'A minimalist to-do list app with categories, priority levels (high, medium, low), due dates, and completion status. Use a card-based layout with smooth animations.',
-    'A personal finance app to track expenses and income by category. Include a dashboard with total balance, monthly spending chart, recent transactions list, and ability to add new transactions.',
-    'A content management dashboard with analytics including total views, engagement rate, subscriber count, and a list of posts with their status (published, draft, scheduled). Include a modern dark mode UI.',
-    'A recipe finder app with search functionality, ingredient lists, cooking instructions, prep time, and ratings. Include a favorites feature and clean card-based layout.',
-    'A habit tracker app where users can create daily habits, mark them as complete, and view their streak. Include a calendar view and motivational stats.',
+    { emoji: '💪', text: 'A fitness tracker app with calorie counting, workout logging, weight tracking, and progress charts. Include a clean modern UI with tabs for Dashboard, Workouts, Nutrition, and Profile.' },
+    { emoji: '✅', text: 'A minimalist to-do list app with categories, priority levels (high, medium, low), due dates, and completion status. Use a card-based layout with smooth animations.' },
+    { emoji: '💰', text: 'A personal finance app to track expenses and income by category. Include a dashboard with total balance, monthly spending chart, recent transactions list, and ability to add new transactions.' },
+    { emoji: '📊', text: 'A content management dashboard with analytics including total views, engagement rate, subscriber count, and a list of posts with their status (published, draft, scheduled). Include a modern dark mode UI.' },
+    { emoji: '🍳', text: 'A recipe finder app with search functionality, ingredient lists, cooking instructions, prep time, and ratings. Include a favorites feature and clean card-based layout.' },
+    { emoji: '🎯', text: 'A habit tracker app where users can create daily habits, mark them as complete, and view their streak. Include a calendar view and motivational stats.' },
   ];
 
   const handleGenerate = async () => {
@@ -86,126 +87,184 @@ export default function HomeScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardAvoid}
-      >
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
+    <LinearGradient
+      colors={['#0F0F23', '#1a1a2e', '#16213e']}
+      style={styles.container}
+    >
+      <SafeAreaView style={styles.safeArea}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.keyboardAvoid}
         >
-          {/* Header */}
-          <View style={styles.header}>
-            <Text style={styles.logo}>Vibe Code</Text>
-            <TouchableOpacity
-              style={styles.settingsButton}
-              onPress={() => navigation.navigate('Settings')}
-            >
-              <Text style={styles.settingsIcon}>⚙️</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Hero Section */}
-          <View style={styles.hero}>
-            <Text style={styles.title}>Bring your ideas to life</Text>
-            <Text style={styles.subtitle}>
-              Describe what you want to build and watch it come to life
-            </Text>
-          </View>
-
-          {/* App Type Toggle */}
-          <View style={styles.toggleContainer}>
-            <TouchableOpacity
-              style={[
-                styles.toggleButton,
-                appType === 'mobile' && styles.toggleButtonActive,
-              ]}
-              onPress={() => setAppType('mobile')}
-            >
-              <Text
-                style={[
-                  styles.toggleText,
-                  appType === 'mobile' && styles.toggleTextActive,
-                ]}
-              >
-                Mobile app
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.toggleButton,
-                appType === 'web' && styles.toggleButtonActive,
-              ]}
-              onPress={() => setAppType('web')}
-            >
-              <Text
-                style={[
-                  styles.toggleText,
-                  appType === 'web' && styles.toggleTextActive,
-                ]}
-              >
-                Web app
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Description Input */}
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder="Describe your app idea..."
-              placeholderTextColor="#666"
-              multiline
-              numberOfLines={6}
-              value={description}
-              onChangeText={setDescription}
-              textAlignVertical="top"
-            />
-          </View>
-
-          {/* Generate Button */}
-          <TouchableOpacity
-            style={[styles.generateButton, isGenerating && styles.generateButtonDisabled]}
-            onPress={handleGenerate}
-            disabled={isGenerating}
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
           >
-            <Text style={styles.generateButtonText}>
-              {isGenerating ? 'Generating...' : 'Generate App'}
-            </Text>
-          </TouchableOpacity>
-
-          {/* Example Prompts */}
-          <View style={styles.examplesContainer}>
-            <Text style={styles.examplesTitle}>Try an example:</Text>
-            {examplePrompts.map((prompt, index) => (
+            {/* Header */}
+            <View style={styles.header}>
+              <LinearGradient
+                colors={['#667eea', '#764ba2', '#f093fb']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.logoGradient}
+              >
+                <Text style={styles.logo}>✨ Vibe Code</Text>
+              </LinearGradient>
               <TouchableOpacity
-                key={index}
-                style={styles.exampleCard}
-                onPress={() => setDescription(prompt)}
+                style={styles.settingsButton}
+                onPress={() => navigation.navigate('Settings')}
               >
-                <Text style={styles.exampleText}>{prompt}</Text>
+                <LinearGradient
+                  colors={['#667eea22', '#764ba222']}
+                  style={styles.settingsIconContainer}
+                >
+                  <Text style={styles.settingsIcon}>⚙️</Text>
+                </LinearGradient>
               </TouchableOpacity>
-            ))}
-          </View>
+            </View>
 
-          {/* Workspace Button */}
-          <TouchableOpacity
-            style={styles.workspaceButton}
-            onPress={() => navigation.navigate('Workspace')}
-          >
-            <Text style={styles.workspaceButtonText}>View My Projects</Text>
-          </TouchableOpacity>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+            {/* Hero Section */}
+            <View style={styles.hero}>
+              <Text style={styles.title}>Bring your ideas to life</Text>
+              <Text style={styles.subtitle}>
+                Describe what you want to build and watch AI create it instantly
+              </Text>
+            </View>
+
+            {/* App Type Toggle */}
+            <LinearGradient
+              colors={['#1e1e3f', '#2a2a4a']}
+              style={styles.toggleContainer}
+            >
+              <TouchableOpacity
+                style={styles.toggleButton}
+                onPress={() => setAppType('mobile')}
+              >
+                {appType === 'mobile' ? (
+                  <LinearGradient
+                    colors={['#667eea', '#764ba2']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.toggleButtonActive}
+                  >
+                    <Text style={styles.toggleTextActive}>📱 Mobile app</Text>
+                  </LinearGradient>
+                ) : (
+                  <Text style={styles.toggleText}>📱 Mobile app</Text>
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.toggleButton}
+                onPress={() => setAppType('web')}
+              >
+                {appType === 'web' ? (
+                  <LinearGradient
+                    colors={['#667eea', '#764ba2']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.toggleButtonActive}
+                  >
+                    <Text style={styles.toggleTextActive}>🌐 Web app</Text>
+                  </LinearGradient>
+                ) : (
+                  <Text style={styles.toggleText}>🌐 Web app</Text>
+                )}
+              </TouchableOpacity>
+            </LinearGradient>
+
+            {/* Description Input */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Describe your vision</Text>
+              <LinearGradient
+                colors={['#1e1e3f', '#2a2a4a']}
+                style={styles.inputGradient}
+              >
+                <TextInput
+                  style={styles.input}
+                  placeholder="A revolutionary app that..."
+                  placeholderTextColor="#7a7a9e"
+                  multiline
+                  numberOfLines={6}
+                  value={description}
+                  onChangeText={setDescription}
+                  textAlignVertical="top"
+                />
+              </LinearGradient>
+            </View>
+
+            {/* Generate Button */}
+            <TouchableOpacity
+              onPress={handleGenerate}
+              disabled={isGenerating}
+              activeOpacity={0.8}
+            >
+              <LinearGradient
+                colors={isGenerating ? ['#555577', '#666688'] : ['#667eea', '#764ba2', '#f093fb']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.generateButton}
+              >
+                <Text style={styles.generateButtonText}>
+                  {isGenerating ? '✨ Generating Magic...' : '🚀 Generate App'}
+                </Text>
+                {!isGenerating && <Text style={styles.generateButtonSubtext}>Powered by Claude AI</Text>}
+              </LinearGradient>
+            </TouchableOpacity>
+
+            {/* Example Prompts */}
+            <View style={styles.examplesContainer}>
+              <Text style={styles.examplesTitle}>✨ Try an example</Text>
+              {examplePrompts.map((prompt, index) => (
+                <TouchableOpacity
+                  key={index}
+                  onPress={() => setDescription(prompt.text)}
+                  activeOpacity={0.7}
+                >
+                  <LinearGradient
+                    colors={['#1e1e3f', '#2a2a4a']}
+                    style={styles.exampleCard}
+                  >
+                    <View style={styles.exampleHeader}>
+                      <Text style={styles.exampleEmoji}>{prompt.emoji}</Text>
+                    </View>
+                    <Text style={styles.exampleText} numberOfLines={2}>
+                      {prompt.text}
+                    </Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {/* Workspace Button */}
+            <TouchableOpacity
+              style={styles.workspaceButton}
+              onPress={() => navigation.navigate('Workspace')}
+              activeOpacity={0.7}
+            >
+              <LinearGradient
+                colors={['#1e1e3f', '#2a2a4a']}
+                style={styles.workspaceGradient}
+              >
+                <Text style={styles.workspaceButtonText}>📂 View My Projects</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+
+            {/* Footer Spacer */}
+            <View style={styles.footer} />
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+  },
+  safeArea: {
+    flex: 1,
   },
   keyboardAvoid: {
     flex: 1,
@@ -219,115 +278,164 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 30,
   },
+  logoGradient: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+  },
   logo: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: '800',
     color: '#fff',
+    letterSpacing: 1,
   },
   settingsButton: {
-    padding: 8,
+    borderRadius: 15,
+    overflow: 'hidden',
+  },
+  settingsIconContainer: {
+    padding: 12,
+    borderRadius: 15,
   },
   settingsIcon: {
     fontSize: 24,
   },
   hero: {
     marginBottom: 30,
+    alignItems: 'center',
   },
   title: {
-    fontSize: 32,
-    fontWeight: 'bold',
+    fontSize: 38,
+    fontWeight: '900',
     color: '#fff',
-    marginBottom: 10,
+    marginBottom: 12,
+    textAlign: 'center',
+    letterSpacing: -1,
   },
   subtitle: {
-    fontSize: 16,
-    color: '#999',
-    lineHeight: 24,
+    fontSize: 17,
+    color: '#a0a0c0',
+    lineHeight: 26,
+    textAlign: 'center',
+    maxWidth: '90%',
   },
   toggleContainer: {
     flexDirection: 'row',
-    backgroundColor: '#1a1a1a',
-    borderRadius: 12,
-    padding: 4,
-    marginBottom: 20,
+    borderRadius: 16,
+    padding: 6,
+    marginBottom: 30,
   },
   toggleButton: {
     flex: 1,
-    paddingVertical: 12,
-    alignItems: 'center',
-    borderRadius: 8,
+    borderRadius: 12,
+    overflow: 'hidden',
   },
   toggleButtonActive: {
-    backgroundColor: '#fff',
+    paddingVertical: 14,
+    alignItems: 'center',
+    borderRadius: 12,
   },
   toggleText: {
     fontSize: 16,
-    color: '#666',
+    color: '#7a7a9e',
     fontWeight: '600',
+    paddingVertical: 14,
+    textAlign: 'center',
   },
   toggleTextActive: {
-    color: '#000',
+    fontSize: 16,
+    color: '#fff',
+    fontWeight: '700',
   },
   inputContainer: {
-    marginBottom: 20,
+    marginBottom: 25,
+  },
+  inputLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#a0a0c0',
+    marginBottom: 12,
+    marginLeft: 4,
+  },
+  inputGradient: {
+    borderRadius: 16,
+    padding: 2,
   },
   input: {
-    backgroundColor: '#1a1a1a',
-    borderRadius: 12,
-    padding: 16,
+    backgroundColor: '#16213e',
+    borderRadius: 14,
+    padding: 18,
     fontSize: 16,
     color: '#fff',
     minHeight: 150,
-    borderWidth: 1,
-    borderColor: '#333',
+    fontWeight: '400',
   },
   generateButton: {
-    backgroundColor: '#fff',
-    paddingVertical: 16,
-    borderRadius: 12,
+    paddingVertical: 20,
+    borderRadius: 16,
     alignItems: 'center',
-    marginBottom: 30,
-  },
-  generateButtonDisabled: {
-    opacity: 0.6,
+    marginBottom: 40,
+    shadowColor: '#667eea',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
+    elevation: 10,
   },
   generateButtonText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#000',
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#fff',
+    letterSpacing: 0.5,
+  },
+  generateButtonSubtext: {
+    fontSize: 12,
+    color: '#ffffffcc',
+    marginTop: 4,
+    fontWeight: '500',
   },
   examplesContainer: {
     marginBottom: 30,
   },
   examplesTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 20,
+    fontWeight: '700',
     color: '#fff',
-    marginBottom: 12,
+    marginBottom: 16,
+    marginLeft: 4,
   },
   exampleCard: {
-    backgroundColor: '#1a1a1a',
-    padding: 16,
-    borderRadius: 12,
+    padding: 18,
+    borderRadius: 16,
+    marginBottom: 12,
+  },
+  exampleHeader: {
     marginBottom: 10,
-    borderWidth: 1,
-    borderColor: '#333',
+  },
+  exampleEmoji: {
+    fontSize: 32,
   },
   exampleText: {
     fontSize: 14,
-    color: '#ccc',
+    color: '#a0a0c0',
+    lineHeight: 22,
+    fontWeight: '500',
   },
   workspaceButton: {
-    backgroundColor: '#1a1a1a',
-    paddingVertical: 16,
-    borderRadius: 12,
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginBottom: 20,
+  },
+  workspaceGradient: {
+    paddingVertical: 18,
+    borderRadius: 16,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#333',
   },
   workspaceButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 17,
+    fontWeight: '700',
     color: '#fff',
+  },
+  footer: {
+    height: 40,
   },
 });
