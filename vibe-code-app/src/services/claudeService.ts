@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
-import * as SecureStore from 'expo-secure-store';
+import storageService from './storageService';
 
 export interface GenerateAppRequest {
   description: string;
@@ -14,7 +14,7 @@ export interface GenerateAppResponse {
 
 class ClaudeService {
   private async getApiKey(): Promise<string> {
-    const apiKey = await SecureStore.getItemAsync('claude_api_key');
+    const apiKey = await storageService.getItem('claude_api_key');
     if (!apiKey) {
       throw new Error('Claude API key not found. Please configure it in Settings.');
     }

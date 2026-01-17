@@ -9,8 +9,9 @@ import {
   SafeAreaView,
   Alert,
   Linking,
+  Platform,
 } from 'react-native';
-import * as SecureStore from 'expo-secure-store';
+import storageService from '../services/storageService';
 
 export default function SettingsScreen() {
   const [apiKey, setApiKey] = useState('');
@@ -26,7 +27,7 @@ export default function SettingsScreen() {
 
   const loadApiKey = async () => {
     try {
-      const storedKey = await SecureStore.getItemAsync('claude_api_key');
+      const storedKey = await storageService.getItem('claude_api_key');
       if (storedKey) {
         setKeyExists(true);
         setIsEditing(false);
@@ -84,14 +85,19 @@ export default function SettingsScreen() {
     setShowSuccessMessage(false);
 
     try {
-      await SecureStore.setItemAsync('claude_api_key', apiKey);
+      await storageService.setItem('claude_api_key', apiKey);
       setKeyExists(true);
       setIsEditing(false);
       setApiKey(MASKED_KEY);
       setShowSuccessMessage(true);
 
-      // Show success alert
-      Alert.alert('Success', 'API key saved securely!', [
+      // Show success alert with platform info
+      const storageType = storageService.getStorageType();
+      const storageMessage = Platform.OS === 'web'
+        ? 'API key saved to browser storage!'
+        : 'API key saved securely!';
+
+      Alert.alert('Success', storageMessage, [
         {
           text: 'OK',
           onPress: () => setShowSuccessMessage(false),
@@ -121,7 +127,7 @@ export default function SettingsScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await SecureStore.deleteItemAsync('claude_api_key');
+              await storageService.deleteItem('claude_api_key');
               setApiKey('');
               setKeyExists(false);
               setIsEditing(true);
@@ -242,6 +248,9 @@ export default function SettingsScreen() {
           <Text style={styles.aboutText}>
             Vibe Code is a free, open-source AI app builder powered by Claude.
             Your API key is stored securely on your device and never sent to our servers.
+          </Text>
+          <Text style={styles.aboutText}>
+            Storage: {Platform.OS === 'web' ? 'Browser localStorage' : 'Expo SecureStore'}
           </Text>
           <Text style={styles.aboutText}>
             Version 1.0.0
