@@ -91,6 +91,7 @@ Remember: Output ONLY the code, no explanations or markdown formatting.`;
       // Initialize Anthropic client
       const client = new Anthropic({
         apiKey,
+        dangerouslyAllowBrowser: true,
       });
       console.log('✅ Anthropic client initialized');
 
@@ -186,6 +187,7 @@ Remember: Output ONLY the code, no explanations or markdown formatting.`;
 
       const client = new Anthropic({
         apiKey,
+        dangerouslyAllowBrowser: true,
       });
 
       const systemPrompt = this.getSystemPrompt(appType);

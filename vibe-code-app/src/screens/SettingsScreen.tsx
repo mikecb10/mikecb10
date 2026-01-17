@@ -11,6 +11,7 @@ import {
   Linking,
   Platform,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import storageService from '../services/storageService';
 
 export default function SettingsScreen() {
@@ -148,198 +149,275 @@ export default function SettingsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Claude API Key</Text>
-          <Text style={styles.sectionDescription}>
-            To use Vibe Code, you need a Claude API key from your Anthropic account.
-          </Text>
+    <LinearGradient
+      colors={['#0F0F23', '#1a1a2e', '#16213e']}
+      style={styles.container}
+    >
+      <SafeAreaView style={styles.safeArea}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Header */}
+          <View style={styles.header}>
+            <LinearGradient
+              colors={['#667eea', '#764ba2', '#f093fb']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.headerGradient}
+            >
+              <Text style={styles.headerTitle}>⚙️ Settings</Text>
+            </LinearGradient>
+          </View>
 
-          <TouchableOpacity
-            style={styles.linkButton}
-            onPress={openAnthropicConsole}
+          <LinearGradient
+            colors={['#1e1e3f', '#2a2a4a']}
+            style={styles.section}
           >
-            <Text style={styles.linkButtonText}>
-              Get your API key from Anthropic Console →
+            <Text style={styles.sectionTitle}>Claude API Key</Text>
+            <Text style={styles.sectionDescription}>
+              To use Vibe Code, you need a Claude API key from your Anthropic account.
             </Text>
-          </TouchableOpacity>
 
-          <View style={styles.inputContainer}>
-            <View style={styles.labelRow}>
-              <Text style={styles.label}>API Key</Text>
-              {keyExists && !isEditing && (
-                <View style={styles.savedBadge}>
-                  <Text style={styles.savedBadgeText}>✓ Saved</Text>
-                </View>
+            <TouchableOpacity
+              style={styles.linkButtonWrapper}
+              onPress={openAnthropicConsole}
+              activeOpacity={0.7}
+            >
+              <LinearGradient
+                colors={['#667eea22', '#764ba222']}
+                style={styles.linkButton}
+              >
+                <Text style={styles.linkButtonText}>
+                  Get your API key from Anthropic Console →
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+
+            <View style={styles.inputContainer}>
+              <View style={styles.labelRow}>
+                <Text style={styles.label}>API Key</Text>
+                {keyExists && !isEditing && (
+                  <LinearGradient
+                    colors={['#00dd00', '#00aa00']}
+                    style={styles.savedBadge}
+                  >
+                    <Text style={styles.savedBadgeText}>✓ Saved</Text>
+                  </LinearGradient>
+                )}
+              </View>
+              <LinearGradient
+                colors={showSuccessMessage ? ['#00dd00', '#00aa00'] : ['#667eea22', '#764ba222']}
+                style={styles.inputGradient}
+              >
+                <TextInput
+                  style={styles.input}
+                  placeholder="sk-ant-..."
+                  placeholderTextColor="#7a7a9e"
+                  value={apiKey}
+                  onChangeText={handleChangeText}
+                  onFocus={handleFocus}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  secureTextEntry={false}
+                />
+              </LinearGradient>
+              {showSuccessMessage && (
+                <LinearGradient
+                  colors={['#00330011', '#00550011']}
+                  style={styles.successMessage}
+                >
+                  <Text style={styles.successMessageText}>✓ API key saved successfully!</Text>
+                </LinearGradient>
               )}
             </View>
-            <TextInput
-              style={[
-                styles.input,
-                showSuccessMessage && styles.inputSuccess,
-              ]}
-              placeholder="sk-ant-..."
-              placeholderTextColor="#666"
-              value={apiKey}
-              onChangeText={handleChangeText}
-              onFocus={handleFocus}
-              autoCapitalize="none"
-              autoCorrect={false}
-              secureTextEntry={false}
-            />
-            {showSuccessMessage && (
-              <View style={styles.successMessage}>
-                <Text style={styles.successMessageText}>✓ API key saved successfully!</Text>
-              </View>
-            )}
-          </View>
 
-          <TouchableOpacity
-            style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
-            onPress={handleSave}
-            disabled={isSaving}
-          >
-            <Text style={styles.saveButtonText}>
-              {isSaving ? 'Saving...' : 'Save API Key'}
-            </Text>
-          </TouchableOpacity>
-
-          {keyExists && (
             <TouchableOpacity
-              style={styles.removeButton}
-              onPress={handleRemove}
+              onPress={handleSave}
+              disabled={isSaving}
+              activeOpacity={0.8}
             >
-              <Text style={styles.removeButtonText}>Remove API Key</Text>
+              <LinearGradient
+                colors={isSaving ? ['#555577', '#666688'] : ['#667eea', '#764ba2', '#f093fb']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.saveButton}
+              >
+                <Text style={styles.saveButtonText}>
+                  {isSaving ? '✨ Saving...' : '💾 Save API Key'}
+                </Text>
+              </LinearGradient>
             </TouchableOpacity>
-          )}
-        </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>How to get your API key</Text>
-          <View style={styles.step}>
-            <Text style={styles.stepNumber}>1.</Text>
-            <Text style={styles.stepText}>
-              Go to console.anthropic.com and sign in
-            </Text>
-          </View>
-          <View style={styles.step}>
-            <Text style={styles.stepNumber}>2.</Text>
-            <Text style={styles.stepText}>
-              Navigate to Settings → API Keys
-            </Text>
-          </View>
-          <View style={styles.step}>
-            <Text style={styles.stepNumber}>3.</Text>
-            <Text style={styles.stepText}>
-              Create a new key and copy it
-            </Text>
-          </View>
-          <View style={styles.step}>
-            <Text style={styles.stepNumber}>4.</Text>
-            <Text style={styles.stepText}>
-              Paste it above and tap "Save API Key"
-            </Text>
-          </View>
-        </View>
+            {keyExists && (
+              <TouchableOpacity
+                style={styles.removeButtonWrapper}
+                onPress={handleRemove}
+                activeOpacity={0.7}
+              >
+                <LinearGradient
+                  colors={['#1e1e3f', '#2a2a4a']}
+                  style={styles.removeButton}
+                >
+                  <Text style={styles.removeButtonText}>🗑️ Remove API Key</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            )}
+          </LinearGradient>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>About</Text>
-          <Text style={styles.aboutText}>
-            Vibe Code is a free, open-source AI app builder powered by Claude.
-            Your API key is stored securely on your device and never sent to our servers.
-          </Text>
-          <Text style={styles.aboutText}>
-            Storage: {Platform.OS === 'web' ? 'Browser localStorage' : 'Expo SecureStore'}
-          </Text>
-          <Text style={styles.aboutText}>
-            Version 1.0.0
-          </Text>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+          <LinearGradient
+            colors={['#1e1e3f', '#2a2a4a']}
+            style={styles.section}
+          >
+            <Text style={styles.sectionTitle}>📖 How to get your API key</Text>
+            <View style={styles.step}>
+              <Text style={styles.stepNumber}>1.</Text>
+              <Text style={styles.stepText}>
+                Go to console.anthropic.com and sign in
+              </Text>
+            </View>
+            <View style={styles.step}>
+              <Text style={styles.stepNumber}>2.</Text>
+              <Text style={styles.stepText}>
+                Navigate to Settings → API Keys
+              </Text>
+            </View>
+            <View style={styles.step}>
+              <Text style={styles.stepNumber}>3.</Text>
+              <Text style={styles.stepText}>
+                Create a new key and copy it
+              </Text>
+            </View>
+            <View style={styles.step}>
+              <Text style={styles.stepNumber}>4.</Text>
+              <Text style={styles.stepText}>
+                Paste it above and tap "Save API Key"
+              </Text>
+            </View>
+          </LinearGradient>
+
+          <LinearGradient
+            colors={['#1e1e3f', '#2a2a4a']}
+            style={styles.section}
+          >
+            <Text style={styles.sectionTitle}>ℹ️ About</Text>
+            <Text style={styles.aboutText}>
+              Vibe Code is a free, open-source AI app builder powered by Claude.
+              Your API key is stored securely on your device and never sent to our servers.
+            </Text>
+            <Text style={styles.aboutText}>
+              Storage: {Platform.OS === 'web' ? 'Browser localStorage' : 'Expo SecureStore'}
+            </Text>
+            <Text style={styles.aboutText}>
+              Version 1.0.0
+            </Text>
+          </LinearGradient>
+
+          {/* Footer Spacer */}
+          <View style={styles.footer} />
+        </ScrollView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+  },
+  safeArea: {
+    flex: 1,
   },
   scrollContent: {
     padding: 20,
   },
-  section: {
+  header: {
     marginBottom: 30,
+    alignItems: 'center',
+  },
+  headerGradient: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 20,
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: '#fff',
+    letterSpacing: 1,
+  },
+  section: {
+    marginBottom: 20,
+    padding: 20,
+    borderRadius: 16,
   },
   sectionTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: '700',
     color: '#fff',
-    marginBottom: 10,
+    marginBottom: 12,
   },
   sectionDescription: {
-    fontSize: 14,
-    color: '#999',
-    lineHeight: 20,
-    marginBottom: 15,
+    fontSize: 15,
+    color: '#a0a0c0',
+    lineHeight: 22,
+    marginBottom: 18,
+  },
+  linkButtonWrapper: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginBottom: 20,
   },
   linkButton: {
-    backgroundColor: '#1a1a1a',
     padding: 16,
     borderRadius: 12,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: '#333',
+    alignItems: 'center',
   },
   linkButtonText: {
-    fontSize: 14,
+    fontSize: 15,
     color: '#fff',
-    textAlign: 'center',
+    fontWeight: '600',
   },
   inputContainer: {
-    marginBottom: 15,
+    marginBottom: 20,
   },
   labelRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 12,
   },
   label: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '600',
-    color: '#fff',
+    color: '#a0a0c0',
   },
   savedBadge: {
-    backgroundColor: '#00aa00',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: 12,
   },
   savedBadgeText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '700',
     color: '#fff',
+  },
+  inputGradient: {
+    borderRadius: 16,
+    padding: 2,
   },
   input: {
-    backgroundColor: '#1a1a1a',
-    borderRadius: 12,
-    padding: 16,
+    backgroundColor: '#16213e',
+    borderRadius: 14,
+    padding: 18,
     fontSize: 16,
     color: '#fff',
-    borderWidth: 1,
-    borderColor: '#333',
-  },
-  inputSuccess: {
-    borderColor: '#00aa00',
-    borderWidth: 2,
+    fontWeight: '400',
   },
   successMessage: {
-    marginTop: 8,
-    backgroundColor: '#00330011',
-    borderRadius: 8,
-    padding: 12,
+    marginTop: 12,
+    borderRadius: 12,
+    padding: 14,
     borderWidth: 1,
     borderColor: '#00aa00',
   },
@@ -350,25 +428,30 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   saveButton: {
-    backgroundColor: '#fff',
-    paddingVertical: 16,
-    borderRadius: 12,
+    paddingVertical: 18,
+    borderRadius: 16,
     alignItems: 'center',
-  },
-  saveButtonDisabled: {
-    opacity: 0.6,
+    marginBottom: 12,
+    shadowColor: '#667eea',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
+    elevation: 10,
   },
   saveButtonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#000',
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#fff',
+    letterSpacing: 0.5,
+  },
+  removeButtonWrapper: {
+    borderRadius: 16,
+    overflow: 'hidden',
   },
   removeButton: {
-    backgroundColor: '#1a1a1a',
     paddingVertical: 16,
-    borderRadius: 12,
+    borderRadius: 16,
     alignItems: 'center',
-    marginTop: 10,
     borderWidth: 1,
     borderColor: '#ff4444',
   },
@@ -379,25 +462,28 @@ const styles = StyleSheet.create({
   },
   step: {
     flexDirection: 'row',
-    marginBottom: 12,
+    marginBottom: 14,
   },
   stepNumber: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginRight: 10,
-    width: 24,
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#667eea',
+    marginRight: 12,
+    width: 28,
   },
   stepText: {
-    fontSize: 14,
-    color: '#ccc',
+    fontSize: 15,
+    color: '#a0a0c0',
     flex: 1,
-    lineHeight: 20,
+    lineHeight: 22,
   },
   aboutText: {
-    fontSize: 14,
-    color: '#999',
-    lineHeight: 20,
-    marginBottom: 10,
+    fontSize: 15,
+    color: '#a0a0c0',
+    lineHeight: 24,
+    marginBottom: 12,
+  },
+  footer: {
+    height: 40,
   },
 });
