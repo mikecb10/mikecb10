@@ -58,6 +58,14 @@ export default function QRCodeDisplay({ url, snackId, loading, code }: QRCodeDis
           </View>
         </View>
 
+        <View style={styles.tipContainer}>
+          <Text style={styles.tipIcon}>💡</Text>
+          <Text style={styles.tipText}>
+            Tip: The generated code is plain JavaScript for Expo Snack compatibility.
+            If you see type errors, you can rename App.js to App.tsx in the Snack editor.
+          </Text>
+        </View>
+
         <TouchableOpacity style={styles.copyButton} onPress={handleCopyCode}>
           <Text style={styles.copyButtonText}>📋 Copy Code</Text>
         </TouchableOpacity>
@@ -93,6 +101,14 @@ export default function QRCodeDisplay({ url, snackId, loading, code }: QRCodeDis
           <Text style={styles.stepNumber}>4.</Text>
           <Text style={styles.stepText}>Scan QR code with Expo Go to test on your phone</Text>
         </View>
+      </View>
+
+      <View style={styles.tipContainer}>
+        <Text style={styles.tipIcon}>💡</Text>
+        <Text style={styles.tipText}>
+          Tip: Generated code is plain JavaScript for Snack compatibility.
+          Rename App.js to App.tsx if needed.
+        </Text>
       </View>
 
       <TouchableOpacity style={styles.copyButton} onPress={handleCopyCode}>
@@ -135,9 +151,30 @@ const styles = StyleSheet.create({
     backgroundColor: '#1a1a1a',
     borderRadius: 12,
     padding: 16,
-    marginBottom: 20,
+    marginBottom: 16,
     borderWidth: 1,
     borderColor: '#333',
+  },
+  tipContainer: {
+    width: '100%',
+    backgroundColor: '#2a2a1a',
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#667eea',
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  tipIcon: {
+    fontSize: 18,
+    marginRight: 10,
+  },
+  tipText: {
+    flex: 1,
+    fontSize: 13,
+    color: '#ccc',
+    lineHeight: 18,
   },
   instructionTitle: {
     fontSize: 16,

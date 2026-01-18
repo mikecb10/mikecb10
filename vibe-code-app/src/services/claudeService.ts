@@ -4,6 +4,7 @@ import storageService from './storageService';
 export interface GenerateAppRequest {
   description: string;
   appType: 'mobile' | 'web';
+  includeAI?: boolean;
 }
 
 export interface GenerateAppResponse {
@@ -27,25 +28,61 @@ class ClaudeService {
     return apiKey;
   }
 
-  private getSystemPrompt(appType: 'mobile' | 'web'): string {
+  private getSystemPrompt(appType: 'mobile' | 'web', includeAI: boolean = false): string {
     if (appType === 'mobile') {
-      return `You are an expert React Native developer. Generate complete, production-ready React Native code based on user descriptions.
+      const baseInstructions = `You are an expert React Native developer. Generate complete, production-ready React Native code based on user descriptions.
+
+CRITICAL EXPO SNACK COMPATIBILITY REQUIREMENTS:
+1. Generate ONLY plain JavaScript code - NO TypeScript
+2. DO NOT use type annotations like useState<Type[]> - just use useState([])
+3. DO NOT use TypeScript interfaces or types
+4. DO NOT use .tsx syntax - use .js conventions only
+5. Use "export default function App()" format
+6. Keep all code in a single file that works as App.js in Expo Snack
 
 IMPORTANT INSTRUCTIONS:
 1. Generate ONLY the component code - no explanations, no markdown, no code fences
-2. Use TypeScript with proper typing
-3. Use modern React Native best practices (hooks, functional components)
-4. Include all necessary imports
-5. Use React Native's built-in components (View, Text, TouchableOpacity, ScrollView, etc.)
-6. Add proper styling with StyleSheet
-7. Make the UI look modern and polished
-8. Handle edge cases and errors gracefully
-9. Add loading states where appropriate
-10. Use safe area views for proper device compatibility
+2. Use modern React Native best practices (hooks, functional components)
+3. Include all necessary imports at the top
+4. Use React Native's built-in components (View, Text, TouchableOpacity, ScrollView, etc.)
+5. Add proper styling with StyleSheet
+6. Make the UI look modern and polished
+7. Handle edge cases and errors gracefully
+8. Add loading states where appropriate
+9. Use safe area views for proper device compatibility
 
-The code should be ready to copy-paste into an App.tsx file and run immediately.`;
+The code should be ready to copy-paste into App.js in Expo Snack and run immediately.`;
+
+      if (includeAI) {
+        return baseInstructions + `
+
+AI INTEGRATION REQUIREMENTS:
+1. Include Claude API integration using @anthropic-ai/sdk
+2. Add a Settings screen/section where users can enter their Claude API key
+3. Store the API key securely using AsyncStorage (from @react-native-async-storage/async-storage)
+4. Replace mock/static data with AI-powered features:
+   - AI search and filtering
+   - AI recommendations
+   - AI-generated content
+   - Intelligent responses to user queries
+5. Add helpful code comments explaining how the AI integration works
+6. Include error handling for API calls
+7. Show loading states during AI operations
+8. Add a warning message that users need their own Claude API key
+9. Make the API key optional - app should still work with limited features if no key provided
+
+Example AI features to include based on app type:
+- Recipe apps: AI-powered recipe search, ingredient suggestions, meal planning
+- Todo apps: AI task categorization, priority suggestions, smart reminders
+- Fitness apps: AI workout recommendations, form tips, progress insights
+- Note apps: AI summaries, auto-categorization, smart search
+
+IMPORTANT: Add clear instructions in comments about obtaining a Claude API key from console.anthropic.com`;
+      }
+
+      return baseInstructions;
     } else {
-      return `You are an expert React/Next.js developer. Generate complete, production-ready web application code based on user descriptions.
+      const baseInstructions = `You are an expert React/Next.js developer. Generate complete, production-ready web application code based on user descriptions.
 
 IMPORTANT INSTRUCTIONS:
 1. Generate ONLY the component code - no explanations, no markdown, no code fences
@@ -60,6 +97,29 @@ IMPORTANT INSTRUCTIONS:
 10. Follow best practices for performance
 
 The code should be ready to copy-paste and run immediately.`;
+
+      if (includeAI) {
+        return baseInstructions + `
+
+AI INTEGRATION REQUIREMENTS:
+1. Include Claude API integration using @anthropic-ai/sdk
+2. Add a Settings panel/modal where users can enter their Claude API key
+3. Store the API key in localStorage
+4. Replace mock/static data with AI-powered features:
+   - AI search and filtering
+   - AI recommendations
+   - AI-generated content
+   - Intelligent responses to user queries
+5. Add helpful code comments explaining how the AI integration works
+6. Include error handling for API calls
+7. Show loading states during AI operations
+8. Add a warning message that users need their own Claude API key
+9. Make the API key optional - app should still work with limited features if no key provided
+
+IMPORTANT: Add clear instructions in comments about obtaining a Claude API key from console.anthropic.com`;
+      }
+
+      return baseInstructions;
     }
   }
 
@@ -95,9 +155,10 @@ Remember: Output ONLY the code, no explanations or markdown formatting.`;
       });
       console.log('✅ Anthropic client initialized');
 
-      const systemPrompt = this.getSystemPrompt(request.appType);
+      const systemPrompt = this.getSystemPrompt(request.appType, request.includeAI || false);
       const userPrompt = this.buildPrompt(request.description, request.appType);
       console.log('📝 Prompts prepared - System:', systemPrompt.length, 'chars, User:', userPrompt.length, 'chars');
+      console.log('🤖 AI Integration:', request.includeAI ? 'ENABLED' : 'DISABLED');
 
       console.log('🌐 Calling Claude API...');
       console.log('🔢 Model: claude-sonnet-4-5-20250929');
@@ -187,10 +248,11 @@ Remember: Output ONLY the code, no explanations or markdown formatting.`;
         dangerouslyAllowBrowser: true,
       });
 
-      const systemPrompt = this.getSystemPrompt(request.appType);
+      const systemPrompt = this.getSystemPrompt(request.appType, request.includeAI || false);
       const userPrompt = this.buildPrompt(request.description, request.appType);
 
       console.log('🌊 Starting streaming API call...');
+      console.log('🤖 AI Integration:', request.includeAI ? 'ENABLED' : 'DISABLED');
 
       // Use the streaming API
       const stream = await client.messages.stream({

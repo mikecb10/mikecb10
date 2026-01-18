@@ -33,6 +33,7 @@ export default function HomeScreen() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [streamingCode, setStreamingCode] = useState('');
   const [isStreamComplete, setIsStreamComplete] = useState(false);
+  const [includeAI, setIncludeAI] = useState(false);
 
   const examplePrompts = [
     { emoji: '💪', text: 'A fitness tracker app with calorie counting, workout logging, weight tracking, and progress charts. Include a clean modern UI with tabs for Dashboard, Workouts, Nutrition, and Profile.' },
@@ -69,6 +70,7 @@ export default function HomeScreen() {
         {
           description,
           appType,
+          includeAI,
         },
         // onChunk callback - called for each piece of code
         (chunk: string) => {
@@ -202,6 +204,43 @@ export default function HomeScreen() {
                   <Text style={styles.toggleText}>🌐 Web app</Text>
                 )}
               </TouchableOpacity>
+            </LinearGradient>
+
+            {/* AI Features Toggle */}
+            <LinearGradient
+              colors={['#1e1e3f', '#2a2a4a']}
+              style={styles.aiToggleContainer}
+            >
+              <View style={styles.aiToggleHeader}>
+                <Text style={styles.aiToggleLabel}>🤖 Include AI Features</Text>
+                <TouchableOpacity
+                  onPress={() => setIncludeAI(!includeAI)}
+                  activeOpacity={0.8}
+                  style={styles.switchContainer}
+                >
+                  <LinearGradient
+                    colors={includeAI ? ['#667eea', '#764ba2'] : ['#3a3a5a', '#4a4a6a']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.switchTrack}
+                  >
+                    <View style={[styles.switchThumb, includeAI && styles.switchThumbActive]} />
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+              <Text style={styles.aiToggleDescription}>
+                Generated app will include Claude AI integration
+              </Text>
+              {includeAI && (
+                <LinearGradient
+                  colors={['#ffaa0022', '#ff660022']}
+                  style={styles.aiWarning}
+                >
+                  <Text style={styles.aiWarningText}>
+                    ⚠️ AI-powered apps require users to have their own Claude API key to function
+                  </Text>
+                </LinearGradient>
+              )}
             </LinearGradient>
 
             {/* Description Input */}
@@ -385,6 +424,63 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#fff',
     fontWeight: '700',
+  },
+  aiToggleContainer: {
+    borderRadius: 16,
+    padding: 18,
+    marginBottom: 30,
+  },
+  aiToggleHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  aiToggleLabel: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  switchContainer: {
+    padding: 2,
+  },
+  switchTrack: {
+    width: 52,
+    height: 30,
+    borderRadius: 15,
+    padding: 2,
+    justifyContent: 'center',
+  },
+  switchThumb: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  switchThumbActive: {
+    alignSelf: 'flex-end',
+  },
+  aiToggleDescription: {
+    fontSize: 13,
+    color: '#a0a0c0',
+    marginBottom: 4,
+  },
+  aiWarning: {
+    marginTop: 12,
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#ffaa00',
+  },
+  aiWarningText: {
+    fontSize: 12,
+    color: '#ffaa00',
+    lineHeight: 18,
   },
   inputContainer: {
     marginBottom: 25,
