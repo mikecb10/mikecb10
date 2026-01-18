@@ -34,6 +34,8 @@ export default function HomeScreen() {
   const [streamingCode, setStreamingCode] = useState('');
   const [isStreamComplete, setIsStreamComplete] = useState(false);
   const [includeAI, setIncludeAI] = useState(false);
+  const [codeValidation, setCodeValidation] = useState<{ isComplete: boolean; issues: string[]; confidence: string } | null>(null);
+  const [showIncompleteWarning, setShowIncompleteWarning] = useState(false);
 
   const examplePrompts = [
     { emoji: '💪', text: 'A fitness tracker app with calorie counting, workout logging, weight tracking, and progress charts. Include a clean modern UI with tabs for Dashboard, Workouts, Nutrition, and Profile.' },
@@ -77,12 +79,44 @@ export default function HomeScreen() {
           setStreamingCode((prev) => prev + chunk);
         },
         // onComplete callback - called when generation is complete
-        (finalCode: string) => {
+        (finalCode: string, validation: { isComplete: boolean; issues: string[]; confidence: string }) => {
           console.log('✅ Streaming complete');
           console.log('📄 Final code length:', finalCode.length);
+          console.log('🔍 Validation:', validation);
 
+          setCodeValidation(validation);
           setIsStreamComplete(true);
           setIsGenerating(false);
+
+          // Check if code is incomplete
+          if (!validation.isComplete || validation.confidence === 'low') {
+            console.warn('⚠️ Code appears incomplete or truncated');
+            setShowIncompleteWarning(true);
+
+            // Show warning to user
+            Alert.alert(
+              '⚠️ Code May Be Incomplete',
+              `The generated code may be truncated. Issues detected:\n\n${validation.issues.join('\n')}\n\nTry using a simpler description or regenerate the app.`,
+              [
+                { text: 'View Anyway', onPress: () => {
+                  navigation.navigate('Preview', {
+                    code: finalCode,
+                    appType,
+                    description,
+                  });
+                  setStreamingCode('');
+                  setIsStreamComplete(false);
+                  setShowIncompleteWarning(false);
+                }},
+                { text: 'Try Again', style: 'cancel', onPress: () => {
+                  setStreamingCode('');
+                  setIsStreamComplete(false);
+                  setShowIncompleteWarning(false);
+                }}
+              ]
+            );
+            return;
+          }
 
           // Auto-navigate to Preview after a short delay
           setTimeout(() => {
@@ -96,6 +130,7 @@ export default function HomeScreen() {
             // Reset streaming state
             setStreamingCode('');
             setIsStreamComplete(false);
+            setShowIncompleteWarning(false);
           }, 1500);
         },
         // onError callback - called if there's an error

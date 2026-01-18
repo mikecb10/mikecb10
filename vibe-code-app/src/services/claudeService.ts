@@ -13,6 +13,83 @@ export interface GenerateAppResponse {
   files: { path: string; content: string }[];
 }
 
+export interface CodeValidationResult {
+  isComplete: boolean;
+  issues: string[];
+  confidence: 'high' | 'medium' | 'low';
+}
+
+/**
+ * Validates if generated code is complete and not truncated
+ * Exported for use in other modules
+ */
+export function validateGeneratedCode(code: string): CodeValidationResult {
+  const issues: string[] = [];
+
+  // Check for balanced braces
+  const openBraces = (code.match(/{/g) || []).length;
+  const closeBraces = (code.match(/}/g) || []).length;
+  if (openBraces !== closeBraces) {
+    issues.push(`Unbalanced braces: ${openBraces} open, ${closeBraces} close`);
+  }
+
+  // Check for balanced parentheses
+  const openParens = (code.match(/\(/g) || []).length;
+  const closeParens = (code.match(/\)/g) || []).length;
+  if (openParens !== closeParens) {
+    issues.push(`Unbalanced parentheses: ${openParens} open, ${closeParens} close`);
+  }
+
+  // Check for balanced square brackets
+  const openBrackets = (code.match(/\[/g) || []).length;
+  const closeBrackets = (code.match(/\]/g) || []).length;
+  if (openBrackets !== closeBrackets) {
+    issues.push(`Unbalanced brackets: ${openBrackets} open, ${closeBrackets} close`);
+  }
+
+  // Check for unterminated strings (common truncation symptom)
+  const lines = code.split('\n');
+  const lastLine = lines[lines.length - 1]?.trim() || '';
+
+  // Check if code ends mid-string (truncation symptom)
+  const hasUnterminatedString = /['"`][^'"`]*$/.test(lastLine) && !lastLine.endsWith(';');
+  if (hasUnterminatedString) {
+    issues.push('Code appears to end with unterminated string');
+  }
+
+  // Check if ends properly (should end with }, ;, or )
+  const trimmedCode = code.trim();
+  const endsWithSemicolonOrBrace = /[;\}\)]\s*$/.test(trimmedCode);
+  if (!endsWithSemicolonOrBrace && trimmedCode.length > 0) {
+    issues.push('Code does not end with proper syntax');
+  }
+
+  // Check for incomplete StyleSheet or export (common in React Native)
+  if (code.includes('StyleSheet.create') && !code.includes('});')) {
+    issues.push('StyleSheet appears incomplete');
+  }
+
+  if (code.includes('export default') && !trimmedCode.endsWith(';') && !trimmedCode.endsWith('}')) {
+    issues.push('Export statement appears incomplete');
+  }
+
+  // Calculate confidence
+  let confidence: 'high' | 'medium' | 'low' = 'high';
+  if (issues.length === 0) {
+    confidence = 'high';
+  } else if (issues.length <= 2) {
+    confidence = 'medium';
+  } else {
+    confidence = 'low';
+  }
+
+  return {
+    isComplete: issues.length === 0,
+    issues,
+    confidence,
+  };
+}
+
 class ClaudeService {
   private async getApiKey(): Promise<string> {
     console.log('🔐 getApiKey: Fetching API key from storage...');
@@ -32,6 +109,16 @@ class ClaudeService {
     if (appType === 'mobile') {
       const baseInstructions = `You are an expert React Native developer. Generate complete, production-ready React Native code based on user descriptions.
 
+CRITICAL CODE SIZE AND QUALITY REQUIREMENTS:
+1. Keep code UNDER 500 LINES - this is essential for completeness
+2. Generate MINIMAL, FOCUSED apps with only essential features
+3. Use simple, clean code - avoid over-engineering
+4. Limit mock data to 3-5 items maximum
+5. Use inline styles for simple elements instead of large StyleSheet objects
+6. Avoid complex nested components - keep it flat and simple
+7. Prioritize WORKING, COMPLETE code over feature richness
+8. If the app idea is complex, implement only the core 2-3 features
+
 CRITICAL EXPO SNACK COMPATIBILITY REQUIREMENTS:
 1. Generate ONLY plain JavaScript code - NO TypeScript
 2. DO NOT use type annotations like useState<Type[]> - just use useState([])
@@ -50,6 +137,8 @@ IMPORTANT INSTRUCTIONS:
 7. Handle edge cases and errors gracefully
 8. Add loading states where appropriate
 9. Use safe area views for proper device compatibility
+
+REMEMBER: Code must be complete and under 500 lines. Simple and working is better than complex and truncated.
 
 The code should be ready to copy-paste into App.js in Expo Snack and run immediately.`;
 
@@ -84,6 +173,16 @@ IMPORTANT: Add clear instructions in comments about obtaining a Claude API key f
     } else {
       const baseInstructions = `You are an expert React/Next.js developer. Generate complete, production-ready web application code based on user descriptions.
 
+CRITICAL CODE SIZE AND QUALITY REQUIREMENTS:
+1. Keep code UNDER 500 LINES - this is essential for completeness
+2. Generate MINIMAL, FOCUSED apps with only essential features
+3. Use simple, clean code - avoid over-engineering
+4. Limit mock data to 3-5 items maximum
+5. Use Tailwind utility classes instead of complex custom CSS
+6. Avoid complex nested components - keep it flat and simple
+7. Prioritize WORKING, COMPLETE code over feature richness
+8. If the app idea is complex, implement only the core 2-3 features
+
 IMPORTANT INSTRUCTIONS:
 1. Generate ONLY the component code - no explanations, no markdown, no code fences
 2. Use TypeScript with proper typing
@@ -95,6 +194,8 @@ IMPORTANT INSTRUCTIONS:
 8. Use semantic HTML
 9. Ensure accessibility (ARIA labels, keyboard navigation)
 10. Follow best practices for performance
+
+REMEMBER: Code must be complete and under 500 lines. Simple and working is better than complex and truncated.
 
 The code should be ready to copy-paste and run immediately.`;
 
@@ -166,7 +267,7 @@ Remember: Output ONLY the code, no explanations or markdown formatting.`;
       // Call Claude API
       const message = await client.messages.create({
         model: 'claude-sonnet-4-5-20250929', // Latest Claude model
-        max_tokens: 8000,
+        max_tokens: 16000, // Increased to reduce truncation
         temperature: 0.7,
         system: systemPrompt,
         messages: [
@@ -232,7 +333,7 @@ Remember: Output ONLY the code, no explanations or markdown formatting.`;
   async generateAppStreaming(
     request: GenerateAppRequest,
     onChunk: (chunk: string) => void,
-    onComplete: (code: string) => void,
+    onComplete: (code: string, validation: CodeValidationResult) => void,
     onError: (error: Error) => void
   ): Promise<void> {
     console.log('📡 claudeService.generateAppStreaming called');
@@ -257,7 +358,7 @@ Remember: Output ONLY the code, no explanations or markdown formatting.`;
       // Use the streaming API
       const stream = await client.messages.stream({
         model: 'claude-sonnet-4-5-20250929',
-        max_tokens: 8000,
+        max_tokens: 16000, // Increased to reduce truncation
         temperature: 0.7,
         system: systemPrompt,
         messages: [
@@ -285,7 +386,17 @@ Remember: Output ONLY the code, no explanations or markdown formatting.`;
       // Clean up the final code
       const cleanedCode = this.cleanCode(fullCode);
       console.log('✅ Streaming completed. Total code length:', cleanedCode.length);
-      onComplete(cleanedCode);
+      console.log('📏 Code lines:', cleanedCode.split('\n').length);
+
+      // Validate the generated code
+      const validation = validateGeneratedCode(cleanedCode);
+      console.log('🔍 Code validation:', validation);
+
+      if (!validation.isComplete) {
+        console.warn('⚠️ Code validation detected issues:', validation.issues);
+      }
+
+      onComplete(cleanedCode, validation);
     } catch (error) {
       console.error('❌ Error in streaming:', error);
       const err = error instanceof Error ? error : new Error('Streaming failed');
